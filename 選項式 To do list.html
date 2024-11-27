@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue 選項式 To do list</title>
+</head>
+<!-- 選項式 一個功能散在各個角落 -->
+
+<body>
+    <div id="app">
+        <!-- 新增資料 -->
+        <!-- .prevent 把送出擋下來，addItem 執行新增 -->
+        <form @submit.prevent="addItem">
+            <input type="text" v-model="input" :style="{ border: inputBorder }">
+            <!-- 按 submit 時新增 -->
+            <input type="submit" value="新增">
+        </form>
+        <hr>
+        <input type="text" v-model="search">
+        <ul>
+            <!-- 過濾後的陣列 -->
+            <li v-for="item in filteredItems">
+                <!-- 以下兩種做法 -->
+                <!-- <input type="checkbox" :checked="item.done" @input="item.done = !item.done"> -->
+                <input type="checkbox" v-model="item.done">
+                <!-- del 刪除線標籤 -->
+                <del v-if="item.done">{{ item.text }}</del>
+                <span v-else>{{ item.text }}</span>
+                <!-- 刪除按鈕 -->
+                <input type="button" value="x" @click="delItem(item.id)">
+            </li>
+        </ul>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        Vue.createApp({
+            data() {
+                return {
+                    items: [],
+                    // 使用者輸入會進去 input
+                    input: '',
+                    // 累加，沒有直接用到 id，不需要用到響應式
+                    id: 1,
+                    search: ''
+                }
+            },
+            computed: {
+                // input 更動會改變綁定的 :style
+                inputBorder() {
+                    if (this.input.length === 0) {
+                        return ''
+                    } else if (this.input.length < 3) {
+                        return '5px solid red'
+                    } else {
+                        return '5px solid green'
+                    }
+                },
+                filteredItems() {
+                    // filter => ture 留下， false踢掉
+                    return this.items.filter(item => {
+                        return item.text.includes(this.search)
+                    })
+                }
+            },
+            methods: {
+                // addItem 執行新增
+                addItem() {
+                    let id = 1
+                    if (this.input.length < 3) return
+
+                    this.items.push({
+                        text: this.input,
+                        // 預設 false
+                        done: false,
+                        id: this.id++
+                    })
+
+                    this.input = ''
+                },
+                delItem(id) {
+                    const i = this.items.findIndex(item => {
+                        return item.id === id
+                    })
+                    this.items.splice(i, 1)
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

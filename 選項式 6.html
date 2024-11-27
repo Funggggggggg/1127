@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- @cilck="getText" ??? -->
+    <div id="app">
+        <h1 id="title" ref="titleref">把它宜蘭平時彼此全面困難如果還有學院公斤，詳細專欄，按鈕模式第</h1>
+        <input type="button" value="取文字" @cilck="getText">
+        <input type="button" ref="btn" :value="取文字" @cilck="plus">
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        Vue.createApp({
+            data() {
+                return {
+                    number: 0
+                }
+            },
+            methods: {
+                getText() {
+                    // 原生 js
+                    const h1 = document.getElementById('title')
+                    console.log(h1.innerText)
+                    // Vue 
+                    // this.$refs.標籤ref  
+                    console.log(this.$refs.titleref.innerText)
+                },
+                async plus() {
+                    this.number++
+                    // 資料更新不會立即渲染 html 還是舊的
+                    console.log(this.$refs.btn.value)
+                    // 等待下一次渲染，$nextTick 固定叫這個名字
+                    await this.$nextTick()
+                    // 才會是新的
+                    console.log(this.$refs.btn.value)
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

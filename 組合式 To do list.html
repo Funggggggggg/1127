@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue 組合式 To do list</title>
+</head>
+<!-- 組合式 -->
+
+<body>
+    <!-- HTML -->
+    <div id="app">
+        <!-- 表單：讓使用者輸入待辦事項 (v-model 綁定 input)，並透過提交 (@submit.prevent) 新增到列表。 -->
+        <form @submit.prevent="addItem">
+            <input type="text" v-model="input" :style="{ border: inputBorder }">
+            <input type="submit" value="新增">
+        </form>
+        <hr>
+        <!-- 搜尋框：輸入關鍵字過濾項目 (v-model 綁定 search)。 -->
+        <input type="text" v-model="search">
+        <ul>
+            <!-- 每項待辦事項有文字（完成則劃線），勾選框 (v-model 綁定 done) 與刪除按鈕。 -->
+            <li v-for="item in filteredItems">
+                <input type="checkbox" v-model="item.done">
+                <del v-if="item.done">{{ item.text }}</del>
+                <span v-else>{{ item.text }}</span>
+                <input type="button" value="x" @click="delItem(item.id)">
+            </li>
+        </ul>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        // 解構方便使用(否則要一直宣告)
+        const { ref, reactive, computed, watch, onMounted } = Vue
+        createApp({
+            setup() {
+                // ref: 所有資料型態都能使用，使用時加 .value 不會深層監聽陣列物件(如：只知道你多一個少一個，不會知道內容)
+                const input = ref('')
+                const search = ref('')
+                // reactive: 只有陣列物件可以用，不用加 .value，可以深層監聽
+                const items = reactive([])
+                // 累加用，上方 html 沒有直接用到 id，不需要用到響應式(也不需要 return )
+                let id = 1
+
+                const inputBorder = computed(() => {
+                    if (input.value.length === 0) {
+                        return ''
+                    } else if (input.value.length < 3) {
+                        return '5px solid red'
+                    } else {
+                        return '5px solid green'
+                    }
+                })
+
+                const delItem = (id) => {
+                    const i = items.findIndex(item => {
+                        return item.id === id
+                    })
+                    items.splice(i, 1)
+                }
+
+                const addItem = () => {
+                    if (input.value.length < 3) return
+
+                    items.push({
+                        text: input.value,
+                        done: false,
+                        id: id++
+                    })
+                    input.value = ''
+                }
+
+                const filteredItems = computed(() => {
+                    return items.filter(item => {
+                        return item.text.includes(search.value)
+                    })
+                })
+
+                // 以下增加新功能 => 存入 localstorage 本地端
+                // watch、onMouted 不用 return
+                // 新舊值都不需要(放) => 變成簡單的 function
+                // 目的：在頁面載入時自動加載先前儲存的待辦項目，並準備好新項目的 ID。
+                // 步驟分解：
+                // 1.讀取資料：
+                //          使用 localStorage.vueList 讀取儲存的待辦清單資料（字串形式）。
+                //          用 JSON.parse 將字串轉成物件或陣列，預設值為 []（如果沒有儲存資料）。
+                // 2. 更新清單：
+                //          使用 items.splice(0, 0, ...json)，將儲存的資料追加到 items 開頭。
+                //          ...json 是展開運算子，用來將 JSON 陣列逐項加入。
+                // 3. 更新 ID：
+                //          如果 items 不為空，根據最後一個項目的 id 設定下一個新增項目的 ID（確保 ID 唯一）。
+                watch(items, () => {
+                    localStorage.vueList = JSON.stringify(items)
+                })
+
+                onMouted(() => {
+                    const json = JSON.parse(localStorage.vueList || '[]')
+                    console.log(json)
+
+                    items.splice(0, 0, ...json)
+
+                    // 修改
+                    if (items.length > 0) {
+                        id = items[items.length - 1].id + 1
+                    }
+                })
+
+                // 把 html 會用到的 return
+                return {
+                    input, search, inputBorder, addItem, delItem, filteredItems
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
